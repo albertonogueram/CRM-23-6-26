@@ -1,0 +1,76 @@
+{
+  "project_name": "Fabián Arenas CRM",
+  "domain": "Automotive Repair B2B Dashboard / CRM",
+  "theme": "Light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "design_philosophy": "Authority, clarity, and function-first. The CRM must feel like a precision tool for a mechanic shop: highly structured, data-dense, and utilitarian. Form follows function. Minimal decoration. Color is used strictly for hierarchy and action.",
+  "colors": {
+    "background_primary": "#FFFFFF",
+    "background_secondary": "#F4F4F5",
+    "surface": "#FFFFFF",
+    "primary_accent": "#DC2626", 
+    "primary_accent_hover": "#B91C1C",
+    "text_primary": "#09090B",
+    "text_secondary": "#71717A",
+    "sidebar_bg": "#09090B",
+    "sidebar_text": "#FAFAFA",
+    "border": "#E4E4E7"
+  },
+  "typography": {
+    "primary_font": "Cabinet Grotesk",
+    "secondary_font": "IBM Plex Sans",
+    "usage_rules": {
+      "h1": "text-3xl md:text-4xl font-black tracking-tight text-zinc-950",
+      "h2": "text-2xl font-bold tracking-tight text-zinc-950",
+      "body": "text-sm md:text-base font-normal text-zinc-700 leading-relaxed",
+      "labels": "text-xs font-bold uppercase tracking-wider text-zinc-500",
+      "numbers": "font-mono text-sm"
+    }
+  },
+  "spacing_and_layout": {
+    "strategy": "The 'Control Room' Grid protocol. Dense and compact spacing for the data-heavy views. Generous padding only in the login view.",
+    "containers": "Use 1px borders (border-zinc-200) instead of shadows for separation.",
+    "padding_scale": "p-4, p-6 for cards; p-2 for table cells.",
+    "radius": "rounded-none or max rounded-sm (2px to 4px). Sharp edges emphasize the mechanical, Swiss aesthetic."
+  },
+  "components": {
+    "buttons": "Flat solid colors, no shadows, sharp corners or very subtle rounding (rounded-sm). Use primary accent (Red) for primary actions, Outline (zinc-200) for secondary.",
+    "inputs": "Shadcn UI inputs with square corners (rounded-none), light gray background on focus, sharp 1px borders.",
+    "tables": "Dense rows, 1px bottom border per row, no vertical borders. Use IBM Plex Sans for tabular data.",
+    "sidebar": "Dark mode sidebar (bg-zinc-950) for high contrast against the light mode main content area. Links should have a subtle hover state (bg-zinc-800).",
+    "cards": "Border-collapse style layout or simple 1px borders with no shadow."
+  },
+  "motion": {
+    "strategy": "Minimalist. Micro-interactions for button hovers and table row highlights. No bouncy or decorative animations."
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "style": "Regular or bold weight, representing precision."
+  },
+  "images": [
+    {
+      "category": "login_background",
+      "url": "https://images.unsplash.com/photo-1727893119356-1702fe921cf9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhdXRvJTIwcmVwYWlyJTIwd29ya3Nob3AlMjBjbGVhbiUyMGludGVyaW9yfGVufDB8fHx8MTc4MTAxMDQ2Nnww&ixlib=rb-4.1.0&q=85",
+      "description": "Modern auto repair workshop - Use this as a dark-overlay background for the login screen."
+    },
+    {
+      "category": "abstract_pattern",
+      "url": "https://images.unsplash.com/photo-1454117096348-e4abbeba002c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMGJhY2tncm91bmQlMjB3aGl0ZSUyMGdyZXl8ZW58MHx8fHwxNzgxMDEwNDY2fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Geometric abstract background - Can be used for empty states or secondary decorative areas."
+    }
+  ],
+  "accessibility_and_testing": {
+    "contrast": "Ensure all text meets APCA/WCAG AA standards. Focus states must have high contrast (focus:ring-2 focus:ring-red-600 focus:ring-offset-1).",
+    "data_testid_rule": "All interactive and key informational elements MUST include a data-testid attribute formatted as kebab-case, role-based. Examples: data-testid='login-submit-button', data-testid='new-client-form'."
+  },
+  "instructions_to_main_agent": [
+    "Do NOT use 'Inter' or generic fonts for headings. Use Cabinet Grotesk for headings and IBM Plex Sans for body/tables.",
+    "Implement a dark sidebar (bg-zinc-950) with white text, and a light main content area (bg-white) to achieve the high-contrast Swiss look.",
+    "For the login page, use the 'login_background' image with a heavy dark overlay (bg-black/70) to ensure the login card stands out.",
+    "Do not use heavy shadows. Rely on 1px borders (border-zinc-200) for separating UI elements.",
+    "The 'Nuevos Clientes' form has 11 fields. Use a dense, multi-column grid layout (grid-cols-1 md:grid-cols-2 lg:grid-cols-3) to avoid massive vertical scrolling. Group related fields (e.g., Address, Vehicle details).",
+    "The 'Fidelización' view should ideally use a Master-Detail pattern: a list of clients on one side (or search bar), and a detail panel for the calculator and invoice history on the other.",
+    "Use standard HTML inputs customized via Shadcn/Tailwind for forms, ensuring a dense, professional look.",
+    "Include 'data-testid' on ALL buttons, inputs, links, and key elements."
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "summary": "Phase 4 backend + frontend tested. Backend: 24/24 pytest pass (VehicleEntry create/update, paired CSV import Matrícula N/Modelo N, bulk 200-row insert, admin update_user with seed/self guards, admin delete regression, mailing /admin/mailing/emails admin-only with dedup+lowercase+@-filter, retrocompat legacy data normalized). Frontend: Mailing page works (214 emails total, copy/csv download/filter), AllClients shows Vehículos column + pdf-client buttons, Usuarios admin edit-user save flow works with disabled state on seed users, no pageerrors. Fixed one CRITICAL backend bug: GET /api/clients returned 500 for legacy clients whose matriculas were list-of-strings (Pydantic ResponseValidationError); _normalize_client now coerces strings to {matricula, modelo:legacy_global_modelo}.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/clients (GET list & GET/{id})", "issue": "BEFORE FIX: legacy docs with matriculas=['STRING'] caused 500 via Pydantic ResponseValidationError (List[VehicleEntry] required dict). Applied fix in _normalize_client to coerce strings → {matricula, modelo:doc.modelo||''}. Now passes."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "NewClient form", "issues": ["Base form fields use data-testid='field-{key}' WITHOUT '-input' suffix while matricula/modelo pair uses '-input' suffix ('field-matricula-input', 'field-modelo-input'). Naming is inconsistent (cosmetic only — works, but confusing for tests)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_crm_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Optional: align field testid naming in NewClient.jsx — either drop '-input' from matricula/modelo OR add '-input' to base fields for consistency.",
+    "Optional: gate /api/clients/import behind admin (currently any authenticated user can import). Not a blocker.",
+    "Optional: migrate FastAPI on_event('startup') to lifespan handler (deprecation, prior iteration note)."
+  ],
+  "critical_code_review_comments": [
+    "server.py _normalize_client BEFORE fix: only handled missing matriculas, leaving legacy list-of-strings unchanged → 500 ResponseValidationError on GET /api/clients. Fixed in this iteration; uses legacy global 'modelo' as fallback for empty modelo.",
+    "server.py admin_update_user: SEED users can have their name edited but not email/role — confirmed correct per spec.",
+    "import_clients header detection uses regex r'(matricula|matrícula|modelo|...)\\s*[_\\-#]?\\s*(\\d*)\\s*$' which correctly parses 'Matrícula 1','Modelo 1','Matrícula 2','Modelo 2' and pairs by index. Verified with bulk 200-row CSV in <30s using insert_many.",
+    "Mailing endpoint dedups by lowercase email, filters out blanks and non-'@' values — verified in test_mailing_emails_admin_ok."
+  ],
+  "updated_files": [
+    "/app/backend/server.py (FIX: _normalize_client coerces legacy matriculas list-of-strings → List[VehicleEntry])",
+    "/app/backend/tests/test_crm_api.py (rewritten for Iteration 4: VehicleEntry shape, paired CSV import, bulk 200 rows, admin update_user with all guards, mailing endpoint, seed restore sanity)"
+  ],
+  "success_rate": {
+    "backend": "100% (24/24 pytest after the _normalize_client fix)",
+    "frontend": "≈90% — login, nav-mailing gating for admin, AllClients (Vehículos column + pdf-client-{id} buttons present), Mailing page (emails-total=214, copy-emails-comma, copy-emails-newline, download-emails-csv yields emails_clientes_fabian_arenas.csv, mailing-filter), Usuarios admin (22 edit/delete buttons, disabled state on seed users + self, edit-user-name save flow returns 'Usuario actualizado' toast). Not directly clicked: post-create-block PDF (form-submit selectors mismatched my testids initially); however backend create-client + structure validated, and the post-create-block + jsPDF code path is intact. 0 pageerrors captured throughout."
+  },
+  "test_credentials": "marketing@fabianarenas.es / marketing442 (admin); info@fabianarenas.es / infofabianarenas442; lidiafernandez@fabianarenas.es / lidiafernandez; taller@fabianarenas.es / tallerfabianarenas442 — all 4 seed logins re-verified 200 at end of run. Lidia's display name restored to 'Lidia Fernández' after UI edit test.",
+  "seed_data_creation": "Backend tests created ~210 TEST_* clients (10 paired + 200 bulk) and several TEST_* users (ephemeral, some deleted). Approx 214 total client emails now in mailing endpoint (verified UI count). Non-destructive to seed users/passwords.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run with: `export $(grep REACT_APP_BACKEND_URL /app/frontend/.env) && pytest /app/backend/tests/test_crm_api.py -v`. Routes: /login, /nuevos-clientes, /todos-clientes, /fidelizacion, /mailing, /usuarios, /perfil. New testids confirmed live in DOM: field-matricula-input, field-modelo-input, field-matricula-add (NewClient); pdf-client-{id} (AllClients table); emails-total, copy-emails-comma, copy-emails-newline, download-emails-csv, mailing-filter (Mailing); edit-user-{id}, delete-user-{id}, edit-user-name, save-edit-user (UsersAdmin); nav-mailing (sidebar). Base NewClient fields use 'field-{key}' (NO '-input' suffix) — be aware. post-create-block + download-fidelity-pdf + print-fidelity-pdf exist in code but were not exercised end-to-end via Playwright due to selector mismatch on base fields; suggest main agent self-test by clicking through NewClient form manually or fixing data-testid naming.",
+  "rca of the issue": "Bug: GET /api/clients returned HTTP 500 (FastAPI ResponseValidationError) for any payload containing legacy clients whose 'matriculas' field is a list of strings (from prior iterations) rather than List[{matricula, modelo}]. Root cause: response_model=List[Client] uses VehicleEntry which requires dict; the helper _normalize_client only handled missing/None matriculas, not the list-of-strings shape. Reproduction: legacy doc with matriculas=['0312LST'] → 'model_attributes_type' error 'Input should be a valid dictionary or object to extract fields from' (confirmed in /var/log/supervisor/backend.err.log). Mitigation applied in /app/backend/server.py _normalize_client: iterate matriculas; for each string item, coerce to {matricula: item.upper(), modelo: doc.get('modelo','')}; for each dict, preserve. Verified: test_list_clients_returns_new_structure + GET /api/clients now 200. Iteration-4 spec retrocompat assertion (matriculas=['9999AAA'] → [{matricula:'9999AAA',modelo:client.modelo||''}]) is now correctly enforced."
+}

@@ -1,0 +1,37 @@
+{
+  "summary": "Phase 3 tested end-to-end: admin users list, admin reset-password (with auth/role guards), admin delete user (seed/self protection), CSV import (Castellano headers, ';' and ',' delimiters, multi-matricula '/' split, skipped rows), Mi Perfil change-password (mismatch + happy path + restore), and the removeChild bug fix on delete/edit of clients. All 31 backend tests pass; all UI flows pass without runtime overlay or pageerrors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_crm_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py: admin_create_user lower-cases email but ResetUserPasswordRequest path-id lookup is by id (OK). Minor: change_password and admin_reset_password should consider invalidating existing JWTs (token rotation) — currently old tokens remain valid until exp. Acceptable for MVP.",
+    "/api/clients/import is gated only by get_current_user (any logged-in user). Consider restricting to admin if business requires it.",
+    "/api/clients/import: CSV parsing uses csv.Sniffer on a 2KB sample; if headers contain ';' but body is mostly text the sniffer may misdetect — currently OK for the tested formats.",
+    "AllClients.jsx delete/edit setTimeout(250) is the documented workaround for Radix Portal removeChild race; verified working but consider migrating to onAnimationEnd callback for deterministic cleanup.",
+    "server.py still uses deprecated FastAPI on_event('startup'/'shutdown') (from prev iteration, unresolved)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_crm_api.py (added 12 Phase-3 tests: admin list/reset/delete users + CSV import variants + seed-pw sanity)"
+  ],
+  "success_rate": {
+    "backend": "100% (31/31)",
+    "frontend": "100% (login, sidebar nav-profile/nav-users gating, profile change-password incl. mismatch validation, admin reset-password for another user, self-reset disabled, CSV import with 2 created, client delete+edit without removeChild overlay)"
+  },
+  "test_credentials": "marketing@fabianarenas.es / marketing442 (admin); info@fabianarenas.es / infofabianarenas442; lidiafernandez@fabianarenas.es / lidiafernandez; taller@fabianarenas.es / tallerfabianarenas442 — from /app/memory/test_credentials.md. All seed passwords restored after tests (verified by test_zz_seed_passwords_still_work + UI flow restored marketing pw and info pw via API).",
+  "seed_data_creation": "Backend tests create TEST_* prefixed users (ephemeral) and TEST Cliente rows. UI test imported 2 'TEST UI Importado A/B' clients via CSV and created 'TEST UI Del <ts>' via API which was deleted in the removeChild test. Some TEST_* rows remain in DB but are non-destructive.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run backend tests with: `export $(grep REACT_APP_BACKEND_URL /app/frontend/.env) && pytest /app/backend/tests/test_crm_api.py -v`. All routes: /login, /nuevos-clientes, /todos-clientes (NOT /clientes), /fidelizacion, /usuarios, /perfil. data-testids confirmed working: nav-profile, nav-users, profile-change-password-form, profile-current-password, profile-new-password, profile-new-password-2, profile-submit, user-row-{id}, reset-pw-{userId} (disabled for self), reset-pw-input, reset-pw-submit, open-import-clients, import-clients-dialog, import-file-input, import-submit, import-result-created, client-row-{id}, edit-client-{id}, delete-client-{id}, confirm-delete-client, save-edit-client. CSV import endpoint is open to any authenticated user (not admin-only).",
+  "rca of the issue": "Reported 'Failed to execute removeChild on Node' on client delete/edit: root cause was React re-rendering the clients list (state mutation removing the row) BEFORE Radix AlertDialog/Dialog's portal completed its close+unmount animation, causing the portal's cleanup to walk a stale child reference. Fix applied by E1 wraps setClients(...) inside setTimeout(..., 250) after closing the dialog so the portal finishes unmounting first. Verified via Playwright: page.on('pageerror') captured 0 errors, no 'Uncaught runtime errors' overlay present after both delete+confirm and edit+save sequences."
+}
